@@ -202,10 +202,10 @@ int main(int argc, char *argv[])
         int tamanho = 0;
         ssize_t bytes;
         
-        //lÃª dos dados enviados pelos filhos via pipe
+        //le os dados enviados pelos filhos via pipe
         while((bytes = readn(fds[0], buf, BUF_SIZE)) != 0)
         {
-            //printf("buf = %s", buf);
+            printf("buf = %s", buf);
             char * message = strtok(buf, "|");
             while(message != NULL)
             {
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
         int k = 0;
         for(k = 0; k < tamanho; k++)
         {
-            printf("arrayMessage[%d] = %s\n", k, arrayMessage[k]);
+            //printf("arrayMessage[%d] = %s\n", k, arrayMessage[k]);
         }
 
         //printf("\n\n");
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 
             for(int t = 0; t < length; t++)
             {
-                printf("bufInts[%d] = %d\n", t, bufInts[t]);
+                //printf("bufInts[%d] = %d\n", t, bufInts[t]);
             }
 
             tamanhoAsterisco = 0;

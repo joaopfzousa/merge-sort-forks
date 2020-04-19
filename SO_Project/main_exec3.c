@@ -6,6 +6,8 @@
 //  Copyright © 2020 João  Sousa. All rights reserved.
 //
 
+//run: gcc main_exec3.c lib_util.c -o all_exec3 -Wall
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

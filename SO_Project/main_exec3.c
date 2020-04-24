@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    //printf("length = %d\n", length);
+    printf("length = %d\n", length);
     
     int h = N;
     int flag = 0;
@@ -187,8 +187,77 @@ int main(int argc, char *argv[])
                         pos += sprintf(pos, "|\n");
                     }
                 }
-                printf("msg = %s", msg);
-                writen(fds[1], msg, strlen(msg));
+                //printf("msg = %s", msg);
+
+                int n = 2;
+                int x = strlen(msg);
+
+                if(x > BUF_SIZE)
+                {
+                    //printf("strlen(msg) = %lu \n", strlen(msg));  
+                    while(x < BUF_SIZE)
+                    {
+                        x = strlen(msg) / n;
+
+                        if( x > BUF_SIZE)
+                        {
+                            n++;
+                        }
+                    }
+                }else{
+                    n = 1;
+                }
+
+                //printf("\n\n n = %d\n", n);
+
+
+                for(int l = 0; l < n; l++)
+                {
+                    int start = 0;
+                    int fim = 0;
+
+                    if(l == 0)
+                    {
+                        start = init;
+                        fim = ((l + 1) * final / n);
+                        //printf(" filho i = 0 filho %d , init = %d, final = %d\n", i, start, fim);
+                    }else if( l == n - 1)
+                    {
+                        start = (l  * final / n) + 1 ;
+                        fim = final;
+                        //printf("filho final %d , init = %d, final = %d\n", i, start, fim);
+                    }else if( l != 0 && l < h && l != n - 1 )
+                    {
+                        start = (l * final / n) + 1;
+                        fim = ((l + 1) * final / n);
+                        //printf("filhos do meio  %d , init = %d, final = %d,\n", i, start, fim);
+                        
+                    }
+
+                    char msg_nova[BUF_SIZE], *pos_nova = msg_nova;
+                    for(int j = start; j <= fim; j++)
+                    {
+                        if(j == start)
+                        {
+                            pos_nova += sprintf(pos_nova, "#%d*%d;%d*", getpid(), start, fim); 
+                        }
+                        
+                        if(j > start){
+                            pos_nova += sprintf(pos_nova, ",");  
+                        }
+
+                        pos_nova += sprintf(pos_nova, "%d", bufInts[j]);
+
+                        if(j == fim)
+                        {
+                            pos_nova += sprintf(pos_nova, "|\n");
+                        }
+                    }
+
+                    printf("msg = %s\n\n\n", msg_nova);
+                    
+                    writen(fds[1], msg_nova, strlen(msg_nova));
+                }
 
                 //fecho do seu descritor do lado de escrita do pipe.
                 close(fds[1]);
@@ -207,7 +276,7 @@ int main(int argc, char *argv[])
         //le os dados enviados pelos filhos via pipe
         while((bytes = readn(fds[0], buf, BUF_SIZE)) != 0)
         {
-            printf("buf = %s", buf);
+            //printf("buf = %s", buf);
             char * message = strtok(buf, "|");
             while(message != NULL)
             {
@@ -218,14 +287,14 @@ int main(int argc, char *argv[])
             }
         }
 
-        printf("\n\n\n");
+        //printf("\n");
         int k = 0;
         for(k = 0; k < tamanho; k++)
         {
             //printf("arrayMessage[%d] = %s\n", k, arrayMessage[k]);
         }
 
-        //printf("\n\n");
+        //printf("\n\n\n\n\n");
 
         for(k = 0; k < tamanho; k++)
         {
@@ -271,7 +340,7 @@ int main(int argc, char *argv[])
             init = arrayPontoVirgula[0];
             fim = arrayPontoVirgula[1];
 
-            printf("\n\n\n");
+            //printf("\n\n\n");
             for(int h = 0; h < tamnhoArrayInts; h++)
             {
                 //printf("newArrayInts[%d] = %d\n", h, newArrayInts[h]);
@@ -291,31 +360,44 @@ int main(int argc, char *argv[])
                 }
             }
 
+            /*
+            printf("\n\n");
             for(int t = 0; t < length; t++)
             {
-                //printf("bufInts[%d] = %d\n", t, bufInts[t]);
+                printf("bufInts[%d] = %d\n", t, bufInts[t]);
             }
+            printf("\n\n");
 
+            */
             tamanhoAsterisco = 0;
             tamanhoPontoVirgula = 0;
             tamnhoArrayInts = 0;
         }
-        flag = 1;
-    }
-   
-    int pid = -1;
-    int status, j = 0;
-    for(j=0; j < N; j++){
-        
-        pid = waitpid(pids[j], &status, 0);
 
-        if (WIFEXITED(status)) {
-            /*
-            WEXITSTATUS(status) - returns the exit status of the child.
-            */
-            //printf("PID %d Status: %d\n", pid, WEXITSTATUS(status));
+        flag = 1;
+
+        int pid = -1;
+        int status, j = 0;
+        for(j=0; j < N; j++){
+            
+            pid = waitpid(pids[j], &status, 0);
+
+            if (WIFEXITED(status)) {
+                /*
+                WEXITSTATUS(status) - returns the exit status of the child.
+                */
+                //printf("PID %d Status: %d\n", pid, WEXITSTATUS(status));
+            }
         }
     }
 
+/**
+    printf("Array { %d, ", bufInts[0]);
+    for(int t = 1; t < length - 1 ; t++)
+    {
+        printf(" %d,", bufInts[t]);
+    }
+    printf("%d }", bufInts[length]);
+*/
     exit(EXIT_SUCCESS);
 }

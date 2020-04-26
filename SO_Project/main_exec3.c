@@ -21,6 +21,7 @@
 
 #define N 7
 #define BUF_SIZE 4096
+#define MAX_C 1200
 
 ssize_t /* Read "n" bytes from a descriptor */
 readn(int fd, void *ptr, size_t n)
@@ -114,6 +115,8 @@ int main(int argc, char *argv[])
         {
             h = h/2;
         }
+        printf("h = %d\n", h);
+
         /*
         * Create the pipe
         */
@@ -123,26 +126,21 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         
-        //while(N < 0 )
-        //N = N/2;
         int i = 0;
-        for (i = 0; i < h; i++) {
-
-    
+        for (i = 0; i < h; i++) 
+        {
             if((pids[i] = fork()) < 0)
             {
                 perror("fork");
                 exit(EXIT_FAILURE);
             }
 
-            if (pids[i] == 0) {
-
+            if (pids[i] == 0) 
+            {
                 //fecho do seu descritor do lado de leitura do pipe.
                 close(fds[0]);
                 
-                int *newArray = (int *) malloc(sizeof(int) * length);
                 int total = 0, init = 0, final = 0;
-
                 if(i == 0)
                 {
                     init = 0;
@@ -165,119 +163,111 @@ int main(int argc, char *argv[])
                     //printf("filho final %d , init = %d, final = %d, total = %d\n", i, init, final, total);
                     mergesort_run(bufInts, total, init, final);
                 }
-
-                free(newArray);
                 
+                //tudo ok até aqui
                 char msg[BUF_SIZE], *pos = msg;
-                for(int j = init; j <= final; j++)
+                int w = 0;
+                //printf("init = %d, final = %d total = %d\n",  init, final, total);
+                if(total <= MAX_C)
                 {
-                    if(j == init)
+                    for(int j = init; j < final; j++)
                     {
-                        pos += sprintf(pos, "#%d*%d;%d*", getpid(), init, final); 
-                    }
-                    
-                    if(j > init){
-                        pos += sprintf(pos, ",");  
-                    }
-
-                    pos += sprintf(pos, "%d", bufInts[j]);
-
-                    if(j == final)
-                    {
-                        pos += sprintf(pos, "|\n");
-                    }
-                }
-                //printf("msg = %s", msg);
-
-                int n = 2;
-                int x = strlen(msg);
-
-                if(x > BUF_SIZE)
-                {
-                    //printf("strlen(msg) = %lu \n", strlen(msg));  
-                    while(x < BUF_SIZE)
-                    {
-                        x = strlen(msg) / n;
-
-                        if( x > BUF_SIZE)
+                        if(j == init)
                         {
-                            n++;
+                            pos += sprintf(pos, "#%d*%d;%d*", getpid(), init, final); 
+                        }else if(j > init){
+                            pos += sprintf(pos, ",");
                         }
+                        pos += sprintf(pos, "%d", bufInts[j]);
+
+                        if(j == final - 1)
+                        {
+                            pos += sprintf(pos, "|\n");
+                        }        
                     }
+                    writen(fds[1], msg, BUF_SIZE);
                 }else{
-                    n = 1;
-                }
-
-                //printf("\n\n n = %d\n", n);
-
-
-                for(int l = 0; l < n; l++)
-                {
-                    int start = 0;
-                    int fim = 0;
-
-                    if(l == 0)
+                    //printf("entrei aqui\n");
+                    while((total /w) > MAX_C)
                     {
-                        start = init;
-                        fim = ((l + 1) * final / n);
-                        //printf(" filho i = 0 filho %d , init = %d, final = %d\n", i, start, fim);
-                    }else if( l == n - 1)
-                    {
-                        start = (l  * final / n) + 1 ;
-                        fim = final;
-                        //printf("filho final %d , init = %d, final = %d\n", i, start, fim);
-                    }else if( l != 0 && l < h && l != n - 1 )
-                    {
-                        start = (l * final / n) + 1;
-                        fim = ((l + 1) * final / n);
-                        //printf("filhos do meio  %d , init = %d, final = %d,\n", i, start, fim);
-                        
+                        w++;
                     }
+
+                    printf("w = %d\n", w);
 
                     char msg_nova[BUF_SIZE], *pos_nova = msg_nova;
-                    for(int j = start; j <= fim; j++)
+
+                    int l = 0;
+                    for(l = 0; l < w; l++)
                     {
-                        if(j == start)
+                        //printf("l =  %d ", l);
+                        int start = 0;
+                        int fim = 0;
+
+                        if(l == 0)
                         {
-                            pos_nova += sprintf(pos_nova, "#%d*%d;%d*", getpid(), start, fim); 
-                        }
-                        
-                        if(j > start){
-                            pos_nova += sprintf(pos_nova, ",");  
+                            start = init;
+                            fim = ((l + 1) * final / w);
+                            //printf(" filho i = 0 filho %d , init = %d, final = %d\n", l, start, fim);
+                        }else if( l == w - 1)
+                        {
+                            start = (l  * final / w) + 1 ;
+                            fim = final;
+                            //printf("filho final %d , init = %d, final = %d\n", l, start, fim);
+                        }else if( l != 0 && l < h && l != w - 1 )
+                        {
+                            start = (l * final / w) + 1;
+                            fim = ((l + 1) * final / w);
+                            //printf("filhos do meio  %d , init = %d, final = %d,\n", l, start, fim);
+                            
                         }
 
-                        pos_nova += sprintf(pos_nova, "%d", bufInts[j]);
-
-                        if(j == fim)
+                        printf("init = %d, final = %d\n", start, fim);
+                        for(int j = start; j <= fim; j++)
                         {
-                            pos_nova += sprintf(pos_nova, "|\n");
+                            if(j == start)
+                            {
+                                pos_nova += sprintf(pos_nova, "#%d*%d;%d*", getpid(), start, fim); 
+                            }
+                            
+                            if(j > start){
+                                pos_nova += sprintf(pos_nova, ",");  
+                            }
+
+                            pos_nova += sprintf(pos_nova, "%d", bufInts[j]);
+
+                            if(j == fim )
+                            {
+                                pos_nova += sprintf(pos_nova, "|\n");
+                            }
                         }
+                        writen(fds[1], msg_nova, BUF_SIZE);
                     }
-
-                    printf("msg = %s\n\n\n", msg_nova);
-                    
-                    writen(fds[1], msg_nova, strlen(msg_nova));
                 }
-
                 //fecho do seu descritor do lado de escrita do pipe.
                 close(fds[1]);
                 exit(EXIT_SUCCESS);
             }
         }
 
+        /**
+         * Até aqui tudo ok
+         * */
+          
+        
         //fecho do seu descritor do lado de escrita do pipe.
         close(fds[1]); 
 
-        char buf[BUF_SIZE];
+        char buf_readn[BUF_SIZE];
         char * arrayMessage[BUF_SIZE];
         int tamanho = 0;
         ssize_t bytes;
         
         //le os dados enviados pelos filhos via pipe
-        while((bytes = readn(fds[0], buf, BUF_SIZE)) != 0)
+        while((bytes = readn(fds[0], buf_readn, BUF_SIZE)) != 0)
         {
-            //printf("buf = %s", buf);
-            char * message = strtok(buf, "|");
+            printf("buf = %s\n\n", buf_readn);
+            char * message = strtok(buf_readn, "|");
             while(message != NULL)
             {
                 arrayMessage[tamanho] = message;
@@ -287,17 +277,10 @@ int main(int argc, char *argv[])
             }
         }
 
-        //printf("\n");
         int k = 0;
         for(k = 0; k < tamanho; k++)
         {
             //printf("arrayMessage[%d] = %s\n", k, arrayMessage[k]);
-        }
-
-        //printf("\n\n\n\n\n");
-
-        for(k = 0; k < tamanho; k++)
-        {
             char * arrayAsterisco[BUF_SIZE];
             int tamanhoAsterisco = 0;
             int * arrayPontoVirgula = (int *) malloc(sizeof(int) * length);
@@ -340,38 +323,29 @@ int main(int argc, char *argv[])
             init = arrayPontoVirgula[0];
             fim = arrayPontoVirgula[1];
 
-            //printf("\n\n\n");
-            for(int h = 0; h < tamnhoArrayInts; h++)
-            {
-                //printf("newArrayInts[%d] = %d\n", h, newArrayInts[h]);
-            }
-
+        
             //printf("init = %d, fim = %d, total  = %d\n", init, fim, (fim - init));
             //printf("tamnhoArrayInts = %d", tamnhoArrayInts - 1 );
             int t = init, q = 0;
 
             for (t = init; t <= fim; t++)
             {
-                //printf ("t = %d, bufInts[%d] = %d, q = %d, newArrayInts[%d] = %d \n", t, t, bufInts[t], q, q, newArrayInts[q]);
                 bufInts[t] = newArrayInts[q];
                 if(q <= tamnhoArrayInts)
                 {
                     q++; 
                 }
+                //printf ("t = %d, bufInts[%d] = %d, q = %d, newArrayInts[%d] = %d \n", t, t, bufInts[t], q, q, newArrayInts[q]);
             }
-
-            /*
-            printf("\n\n");
-            for(int t = 0; t < length; t++)
-            {
-                printf("bufInts[%d] = %d\n", t, bufInts[t]);
-            }
-            printf("\n\n");
-
-            */
+            
             tamanhoAsterisco = 0;
             tamanhoPontoVirgula = 0;
             tamnhoArrayInts = 0;
+        }
+
+        if(h == 1)
+        {
+            h = 0;
         }
 
         flag = 1;
@@ -391,13 +365,13 @@ int main(int argc, char *argv[])
         }
     }
 
-/**
-    printf("Array { %d, ", bufInts[0]);
+    
+    printf("\n\nArray { %d, ", bufInts[0]);
     for(int t = 1; t < length - 1 ; t++)
     {
         printf(" %d,", bufInts[t]);
     }
-    printf("%d }", bufInts[length]);
-*/
+    printf("%d }\n", bufInts[length]);
+
     exit(EXIT_SUCCESS);
 }

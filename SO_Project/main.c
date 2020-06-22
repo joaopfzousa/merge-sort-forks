@@ -121,21 +121,21 @@ int main(int argc, const char *argv[])
                 init = 0;
                 final = ((i + 1) * length / N) - 1 ;
                 total = final;
-                printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
+                //printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
                 mergesort_recursivo(bufInts, newArray, init, final);
             }else if( i != 0 && i < N && i != N -1 )
             {
                 init = (i * length / N);
                 final = ((i + 1) * length / N) - 1;
                 total = final - init;
-                printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
+                //printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
                 mergesort_recursivo(bufInts, newArray, init, final);
             }else if( i == N - 1)
             {
                 init = (i  * length / N);
                 final = length - 1 ;
                 total = final - init;
-                printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
+                //printf("filho %d , init = %d, final = %d, total = %d\n", i, init, final, total);
                 mergesort_recursivo(bufInts, newArray, init, final);
             }
             
